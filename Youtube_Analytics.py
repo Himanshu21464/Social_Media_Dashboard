@@ -1,4 +1,5 @@
 import os
+import csv
 import pickle
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -8,6 +9,7 @@ API_SERVICE_NAME = 'youtubeAnalytics'
 API_VERSION = 'v2'
 CLIENT_SECRETS_FILE = 'Youtube_Analytics.json'
 CREDENTIALS_FILE = 'youtube_analytics_credentials.pickle'  # Name of the file to store/load credentials
+CSV_FILE = 'youtube_analytics_data.csv'  # Name of the CSV file to save data
 
 def get_authenticated_service():
     # Try to load credentials from a file
@@ -26,7 +28,22 @@ def get_authenticated_service():
 
 def execute_api_request(client_library_function, **kwargs):
     response = client_library_function(**kwargs).execute()
-    print(response)
+    return response
+
+def save_to_csv(data, csv_file):
+    with open(csv_file, 'w', newline='') as csvfile:
+        csv_writer = csv.writer(csvfile)
+
+        # Write header
+        header = data.get('columnHeaders', [])
+        if header:
+            header_row = [header_item['name'] for header_item in header]
+            csv_writer.writerow(header_row)
+
+        # Write data rows
+        rows = data.get('rows', [])
+        for row in rows:
+            csv_writer.writerow(row)
 
 if __name__ == '__main__':
     # Disable OAuthlib's HTTPs verification when running locally.
@@ -34,12 +51,17 @@ if __name__ == '__main__':
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
     youtubeAnalytics = get_authenticated_service()
-    execute_api_request(
+    response_data = execute_api_request(
         youtubeAnalytics.reports().query,
         ids='channel==MINE',
         startDate='2020-01-01',
-        endDate='2022-10-01',
-        metrics='estimatedMinutesWatched,views,likes,subscribersGained',
+        endDate='2023-10-01',
+        metrics='estimatedMinutesWatched,views,likes,comments,dislikes,shares,subscribersGained',
         dimensions='day',
         sort='day'
     )
+
+    # Save the data to a CSV file
+    save_to_csv(response_data, CSV_FILE)
+
+    print(f'Data saved to {CSV_FILE}')
