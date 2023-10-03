@@ -5,9 +5,25 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 API_KEY = "AIzaSyBPwWMVAa5gdo6pPo7_mrQeZkKoZO5FCiY"
-CHANNEL_ID = "UC1KonH1j8WMhc5cT6Bp7NtA"
+#CHANNEL_ID = "UC1KonH1j8WMhc5cT6Bp7NtA"
 youtube = build('youtube', 'v3', developerKey=API_KEY)
 
+
+def search_channel_by_name(youtube, channel_name):
+    request = youtube.search().list(
+        q=channel_name,
+        type="channel",
+        part="id"
+    )
+    response = request.execute()
+
+    if 'items' in response:
+        # Assuming the first result is the desired channel
+        channel_id = response['items'][0]['id']['channelId']
+        return channel_id
+    else:
+        print(f"No channel found with the name '{channel_name}'.")
+        return None
 
 def get_channel_stats(youtube, channel_id):
     request = youtube.channels().list(
@@ -92,16 +108,22 @@ def get_video_details(youtube, video_list):
     return stats_list
 
 
-channel_stats = get_channel_stats(youtube, CHANNEL_ID)
-upload_id = channel_stats[0]['contentDetails']['relatedPlaylists']['uploads']
-video_list = get_video_list(youtube, upload_id)
-video_data = get_video_details(youtube, video_list)
-df = pd.DataFrame(video_data)
-df['title_length'] = df['title'].str.len()
-df["view_count"] = pd.to_numeric(df["view_count"])
-df["like_count"] = pd.to_numeric(df["like_count"])
-df["dislike_count"] = pd.to_numeric(df["dislike_count"])
-df["comment_count"] = pd.to_numeric(df["comment_count"])
-df["reactions"] = df["like_count"] + df["dislike_count"] + df["comment_count"] + df["comment_count"]
-df.to_csv("GMM-Data.csv")
-print(df.head())
+# Ask the user to enter a channel name
+channel_name = input("Enter the name of the YouTube channel: ")
+CHANNEL_ID = search_channel_by_name(youtube, channel_name)
+
+if CHANNEL_ID:
+
+    channel_stats = get_channel_stats(youtube, CHANNEL_ID)
+    upload_id = channel_stats[0]['contentDetails']['relatedPlaylists']['uploads']
+    video_list = get_video_list(youtube, upload_id)
+    video_data = get_video_details(youtube, video_list)
+    df = pd.DataFrame(video_data)
+    df['title_length'] = df['title'].str.len()
+    df["view_count"] = pd.to_numeric(df["view_count"])
+    df["like_count"] = pd.to_numeric(df["like_count"])
+    df["dislike_count"] = pd.to_numeric(df["dislike_count"])
+    df["comment_count"] = pd.to_numeric(df["comment_count"])
+    df["reactions"] = df["like_count"] + df["dislike_count"] + df["comment_count"] + df["comment_count"]
+    df.to_csv("GMM-Data.csv")
+    print(df.head())
