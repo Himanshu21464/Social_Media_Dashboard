@@ -45,20 +45,33 @@ def get_channel_stats(youtube, channel_id):
 def get_video_list(youtube, upload_id, date_range):
     video_list = []
 
-    # Calculate the date in the past based on the user's choice
-    if date_range == '1_month':
-        past_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
-    elif date_range == '1_week':
-        past_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m:%dT%H:%M:%SZ')
+    # Initialize max_results
+    max_results = None
+
+    # Calculate the date in the past and set max_results based on the user's choice
+    if date_range == '1_week':
+        past_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ')
     elif date_range == '15_days':
-        past_date = (datetime.now() - timedelta(days=15)).strftime('%Y-%m:%dT%H:%M:%SZ')
+        past_date = (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    elif date_range == '30_days':
+        past_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    elif date_range == 'last_10_videos':
+        max_results = 10
+        past_date = None  # Get all videos
+    elif date_range == 'last_50_videos':
+        max_results = 50
+        past_date = None  # Get all videos
+    elif date_range == 'all_videos':
+        max_results = None  # Get all videos
+        past_date = None  # Get all videos
     else:
-        past_date = None
+        print("Invalid date range choice.")
+        return []
 
     request = youtube.playlistItems().list(
         part="snippet,contentDetails",
         playlistId=upload_id,
-        maxResults=50
+        maxResults=max_results if max_results is not None else 50
     )
 
     next_page = True
@@ -81,7 +94,7 @@ def get_video_list(youtube, upload_id, date_range):
                 part="snippet,contentDetails",
                 playlistId=upload_id,
                 pageToken=response['nextPageToken'],
-                maxResults=50
+                maxResults=max_results if max_results is not None else 50
             )
         else:
             next_page = False
@@ -145,9 +158,25 @@ if CHANNEL_ID:
     upload_id = channel_stats[0]['contentDetails']['relatedPlaylists']['uploads']
 
     # Ask the user to choose a date range
-    date_range = input("Choose a date range (1_month, 1_week, 15_days): ")
+    print("Choose a date range:")
+    print("1. Last 1 week")
+    print("2. Last 15 days")
+    print("3. Last 30 days")
+    print("4. Last 10 videos")
+    print("5. Last 50 videos")
+    print("6. All videos")
+    date_range_choice = input("Enter the option (1-6): ")
 
-    if date_range in ['1_month', '1_week', '15_days']:
+    if date_range_choice in ['1', '2', '3', '4', '5', '6']:
+        date_ranges = {
+            '1': '1_week',
+            '2': '15_days',
+            '3': '30_days',
+            '4': 'last_10_videos',
+            '5': 'last_50_videos',
+            '6': 'all_videos'
+        }
+        date_range = date_ranges[date_range_choice]
         video_list = get_video_list(youtube, upload_id, date_range)
         video_data = get_video_details(youtube, video_list)
 
@@ -167,6 +196,10 @@ if CHANNEL_ID:
         try:
             conn = mysql.connector.connect(**DB_CONFIG)
             cursor = conn.cursor()
+
+            # Clear all rows from the MySQL table
+            cursor.execute('DELETE FROM YouTube;')
+            conn.commit()
 
             # Create a MySQL table if it doesn't exist
             create_table_query = '''
@@ -193,7 +226,7 @@ if CHANNEL_ID:
                 )
             conn.commit()
 
-            print(f"Data saved as '{file_name}' and inserted into the MySQL table 'youtube_data'.")
+            print(f"Data saved as '{file_name}' and inserted into the MySQL table 'YouTube'.")
 
         except mysql.connector.Error as e:
             print(f"Error: {e}")
@@ -203,4 +236,4 @@ if CHANNEL_ID:
             conn.close()
 
     else:
-        print("Invalid date range choice. Please choose from 1_month, 1_week, or 15_days.")
+        print("Invalid date range choice. Please enter a valid option (1-6).")
