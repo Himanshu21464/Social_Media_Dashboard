@@ -9,8 +9,11 @@ DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
     'password': 'Himanshu@1809',
-    'database': 'YouTube_Analytics'
 }
+
+# Database and table names
+DATABASE_NAME = 'YouTube_Analytics'
+TABLE_NAME = 'YouTube'
 
 API_KEY = "AIzaSyBPwWMVAa5gdo6pPo7_mrQeZkKoZO5FCiY"  # Replace with your YouTube Data API Key
 
@@ -142,9 +145,44 @@ def get_video_details(youtube, video_list):
             stats_list.append(stats_dict)
 
     return stats_list
-
 # Ask the user to enter a channel name
 channel_name = input("Enter the name of the YouTube channel: ")
+
+# Initialize the MySQL connection
+conn = mysql.connector.connect(**DB_CONFIG)
+cursor = conn.cursor()
+
+# Create the MySQL database if it doesn't exist
+try:
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DATABASE_NAME}")
+    conn.commit()
+    print(f"Database '{DATABASE_NAME}' created successfully!!!")
+except mysql.connector.Error as e:
+    print(f"Error creating the database: {e}")
+
+# Use the created database
+cursor.execute(f"USE {DATABASE_NAME}")
+
+# Create the MySQL table if it doesn't exist
+create_table_query = f'''
+CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+    Title VARCHAR(255),
+    Description TEXT,
+    Published TEXT,
+    Tag_Count INT,
+    View_Count INT,
+    Like_Count INT,
+    Dislike_Count INT,
+    Comment_Count INT,
+    Reactions INT
+);
+'''
+try:
+    cursor.execute(create_table_query)
+    conn.commit()
+    print(f"Created table '{TABLE_NAME}'")
+except mysql.connector.Error as e:
+    print(f"Error creating the table: {e}")
 
 # Initialize the YouTube API
 youtube = build('youtube', 'v3', developerKey=API_KEY)
@@ -196,6 +234,9 @@ if CHANNEL_ID:
         try:
             conn = mysql.connector.connect(**DB_CONFIG)
             cursor = conn.cursor()
+
+            # Use the created database
+            cursor.execute(f"USE {DATABASE_NAME}")
 
             # Clear all rows from the MySQL table
             cursor.execute('DELETE FROM YouTube;')
