@@ -21,11 +21,11 @@ SELECT
     Dislike_Count AS Dislike_Count,
     comment_Count AS Comment_Count,
     Reactions AS Reactions,
+    Duration AS duration,
     NULL AS username,  -- Placeholder for username
     NULL AS video_id,  -- Placeholder for video_id
     NULL AS url,      -- Placeholder for url
-    NULL as duration,
-    NULL as Tags
+    NULL AS Tags
 FROM YouTube_Analytics.YouTube
 
 UNION ALL
