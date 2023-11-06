@@ -104,6 +104,7 @@ def get_video_list(youtube, upload_id, date_range):
 
     return video_list
 
+
 # Function to get details of videos
 def get_video_details(youtube, video_list):
     stats_list = []
@@ -119,6 +120,9 @@ def get_video_details(youtube, video_list):
             title = video['snippet']['title']
             published = video['snippet']['publishedAt']
             description = video['snippet']['description']
+
+            # Get video duration in ISO 8601 format
+            duration = video['contentDetails']['duration']
 
             # Check if 'tags' field exists and handle it gracefully
             if 'tags' in video['snippet']:
@@ -140,13 +144,15 @@ def get_video_details(youtube, video_list):
                 view_count=view_count,
                 like_count=like_count,
                 dislike_count=dislike_count,
-                comment_count=comment_count
+                comment_count=comment_count,
+                duration=duration  # Added video duration
             )
             stats_list.append(stats_dict)
 
     return stats_list
 # Ask the user to enter a channel name
-channel_name = input("Enter the name of the YouTube channel: ")
+#channel_name = input("Enter the name of the YouTube channel: ")
+channel_name = "soul regaltos"
 
 # Initialize the MySQL connection
 conn = mysql.connector.connect(**DB_CONFIG)
@@ -174,7 +180,8 @@ CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
     Like_Count INT,
     Dislike_Count INT,
     Comment_Count INT,
-    Reactions INT
+    Reactions INT,
+    Duration VARCHAR(10)
 );
 '''
 try:
@@ -203,7 +210,8 @@ if CHANNEL_ID:
     print("4. Last 10 videos")
     print("5. Last 50 videos")
     print("6. All videos")
-    date_range_choice = input("Enter the option (1-6): ")
+    #date_range_choice = input("Enter the option (1-6): ")
+    date_range_choice = '3'
 
     if date_range_choice in ['1', '2', '3', '4', '5', '6']:
         date_ranges = {
@@ -253,7 +261,8 @@ if CHANNEL_ID:
                 Like_Count INT,
                 Dislike_Count INT,
                 Comment_Count INT,
-                Reactions INT
+                Reactions INT,
+                Duration VARCHAR(10)
             );
             '''
             cursor.execute(create_table_query)
@@ -262,8 +271,9 @@ if CHANNEL_ID:
             # Insert data into the MySQL table
             for row in df.itertuples(index=False):
                 cursor.execute(
-                    'INSERT INTO YouTube (Title, Description, Published, Tag_Count, View_Count, Like_Count, Dislike_Count, Comment_Count, Reactions) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                    (row.title, row.description, row.published, row.tag_count, row.view_count, row.like_count, row.dislike_count, row.comment_count, row.reactions)
+                    'INSERT INTO YouTube (Title, Description, Published, Tag_Count, View_Count, Like_Count, Dislike_Count, Comment_Count, Reactions, Duration) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                    (row.title, row.description, row.published, row.tag_count, row.view_count, row.like_count,
+                     row.dislike_count, row.comment_count, row.reactions, row.duration)
                 )
             conn.commit()
 
