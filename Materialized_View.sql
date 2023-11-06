@@ -38,8 +38,8 @@ SELECT
     NULL AS Tag_Count,    -- Placeholder for Tag_Count
     views_total AS View_Count,
     likes_total AS Like_Count,
-    NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
-    NULL AS Comment_Count,  -- Placeholder for Comment_Count
+    0 AS Dislike_Count,  -- Placeholder for Dislike_Count
+    0 AS Comment_Count,  -- Placeholder for Comment_Count
     rating as Reactions,
     duration as duration,
     tags AS Tags,
@@ -55,11 +55,11 @@ SELECT
     title AS Title,
     description as Description,
     published_at as Published_Date,
-    NULL AS Tag_Count,  -- Placeholder for Tag_Count
+    0 AS Tag_Count,  -- Placeholder for Tag_Count
     views AS View_Count,
-    NULL AS Like_Count,  -- Placeholder for Like_Count
-    NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
-    NULL AS Comment_Count,  -- Placeholder for Comment_Count
+    0 AS Like_Count,  -- Placeholder for Like_Count
+    0 AS Dislike_Count,  -- Placeholder for Dislike_Count
+    0 AS Comment_Count,  -- Placeholder for Comment_Count
     duration as duration,
     NULL AS Tags,  -- Placeholder for Tags
     url as url,
