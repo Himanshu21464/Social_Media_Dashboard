@@ -739,77 +739,84 @@ def create_social_media_dashboard_view():
         cursor = conn.cursor()
 
         cursor.execute("CREATE DATABASE IF NOT EXISTS global_database;")
-        cursor.execute("use global_database;")
+        cursor.execute("USE global_database;")
 
-        # Define the SQL script to create the view
-        create_view_query = """
-        CREATE VIEW social_media_Dashboard AS
-        SELECT
-            'YouTube' AS Platform,
-            Title AS Title,
-            Description AS Description,
-            Published AS Published_Date,
-            Tag_Count AS Tag_Count,
-            View_Count AS View_Count,
-            like_Count AS Like_Count,
-            Dislike_Count AS Dislike_Count,
-            comment_Count AS Comment_Count,
-            Reactions AS Reactions,
-            Duration AS Duration,
-            NULL AS username,  -- Placeholder for username
-            NULL AS video_id,  -- Placeholder for video_id
-            NULL AS url,      -- Placeholder for url
-            NULL as Tags
-        FROM YouTube_Analytics.YouTube
+        # Check if the view already exists
+        cursor.execute("SHOW TABLES LIKE 'social_media_Dashboard';")
+        view_exists = cursor.fetchone()
 
-        UNION ALL
+        if view_exists:
+            print("Social Media Dashboard view already exists. No need to create.")
+        else:
+            # Define the SQL script to create the view
+            create_view_query = """
+            CREATE VIEW social_media_Dashboard AS
+            SELECT
+                'YouTube' AS Platform,
+                Title AS Title,
+                Description AS Description,
+                Published AS Published_Date,
+                Tag_Count AS Tag_Count,
+                View_Count AS View_Count,
+                like_Count AS Like_Count,
+                Dislike_Count AS Dislike_Count,
+                comment_Count AS Comment_Count,
+                Reactions AS Reactions,
+                Duration AS Duration,
+                NULL AS username,  -- Placeholder for username
+                NULL AS video_id,  -- Placeholder for video_id
+                NULL AS url,      -- Placeholder for url
+                NULL as Tags
+            FROM YouTube_Analytics.YouTube
 
-        SELECT
-            'DailyMotion' AS Platform,
-            title AS Title,
-            NULL AS Description,  -- Placeholder for Description
-            created_time AS Published_Date,
-            NULL AS Tag_Count,    -- Placeholder for Tag_Count
-            views_total AS View_Count,
-            likes_total AS Like_Count,
-            NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
-            NULL AS Comment_Count,  -- Placeholder for Comment_Count
-            rating as Reactions,
-            duration as duration,
-            tags AS Tags,
-            NULL AS username,  -- Placeholder for username
-            NULL AS video_id,  -- Placeholder for video_id
-            NULL AS url       -- Placeholder for url
-        FROM dailymotion.dailymotion_videos
+            UNION ALL
 
-        UNION ALL
+            SELECT
+                'DailyMotion' AS Platform,
+                title AS Title,
+                NULL AS Description,  -- Placeholder for Description
+                created_time AS Published_Date,
+                NULL AS Tag_Count,    -- Placeholder for Tag_Count
+                views_total AS View_Count,
+                likes_total AS Like_Count,
+                NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
+                NULL AS Comment_Count,  -- Placeholder for Comment_Count
+                rating as Reactions,
+                duration as duration,
+                tags AS Tags,
+                NULL AS username,  -- Placeholder for username
+                NULL AS video_id,  -- Placeholder for video_id
+                NULL AS url       -- Placeholder for url
+            FROM dailymotion.dailymotion_videos
 
-        SELECT
-            'Twitch' AS Platform,
-            title AS Title,
-            description as Description,
-            published_at as Published_Date,
-            NULL AS Tag_Count,  -- Placeholder for Tag_Count
-            views AS View_Count,
-            NULL AS Like_Count,  -- Placeholder for Like_Count
-            NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
-            NULL AS Comment_Count,  -- Placeholder for Comment_Count
-            NULL as Reactions,
-            duration as duration,
-            NULL AS Tags,  -- Placeholder for Tags
-            url as url,
-            username as username,
-            video_id as video_id
-        FROM twitch.twitch_videos;
-        """
+            UNION ALL
 
-        # Execute the SQL script
-        cursor.execute(create_view_query)
+            SELECT
+                'Twitch' AS Platform,
+                title AS Title,
+                description as Description,
+                published_at as Published_Date,
+                NULL AS Tag_Count,  -- Placeholder for Tag_Count
+                views AS View_Count,
+                NULL AS Like_Count,  -- Placeholder for Like_Count
+                NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
+                NULL AS Comment_Count,  -- Placeholder for Comment_Count
+                NULL as Reactions,
+                duration as duration,
+                NULL AS Tags,  -- Placeholder for Tags
+                url as url,
+                username as username,
+                video_id as video_id
+            FROM twitch.twitch_videos;
+            """
 
-        # Commit the changes
-        conn.commit()
+            # Execute the SQL script
+            cursor.execute(create_view_query)
 
-        print("Social Media Dashboard view created successfully.")
+            # Commit the changes
+            conn.commit()
+
+            print("Social Media Dashboard view created successfully.")
 
         # Close the cursor and the connection
         cursor.close()
@@ -819,13 +826,13 @@ def create_social_media_dashboard_view():
         print(f"MySQL Error: {err}")
 
 
-DAILYMOTION()
-standardize_dailymotion_video_duration()
+# DAILYMOTION()
+# standardize_dailymotion_video_duration()
+#
+# TWITCH()
+# standardize_twitch_video_duration()
 
-TWITCH()
-standardize_twitch_video_duration()
-
-YOUTUBE()
+# YOUTUBE()
 
 # Call the function to run the query
 create_social_media_dashboard_view()
