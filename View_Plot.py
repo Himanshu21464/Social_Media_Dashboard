@@ -1,32 +1,26 @@
 import mysql.connector
+import matplotlib
 import matplotlib.pyplot as plt
 
-# Function to fetch data from a table and return a list of view counts
-def fetch_view_counts(database, table):
+
+
+# Function to fetch data from the social_media_dashboard view
+def fetch_view_counts(platform):
     try:
         # Connect to the MySQL database
         conn = mysql.connector.connect(
             host="localhost",
             user="root",
             password="Himanshu@1809",
-            database=database
+            database="global_database"
         )
 
         # Create a cursor
         cursor = conn.cursor()
 
-        # Fetch view counts from the specified table
-        query1 = "SELECT View_Count FROM YouTube;"
-        query2 = "SELECT views FROM twitch_videos;"
-        query3 = "SELECT views_total FROM dailymotion_videos;"
-
-        if(database=="twitch"):
-            cursor.execute(query2)
-        elif(database=="dailymotion"):
-            cursor.execute(query3)
-        elif(database=="YouTube_Analytics"):
-            cursor.execute(query1)
-
+        # Fetch view counts from the social_media_dashboard view
+        query = "SELECT View_Count FROM social_media_Dashboard WHERE Platform = %s;"
+        cursor.execute(query, (platform,))
 
         # Extract view counts into a list and reverse it
         view_counts = [row[0] for row in cursor.fetchall()][::-1]
@@ -41,10 +35,10 @@ def fetch_view_counts(database, table):
         print(f"MySQL Error: {err}")
         return []
 
-# Fetch view counts from Twitch, Dailymotion, and YouTube_Analytics tables
-twitch_view_counts = fetch_view_counts("twitch", "twitch_videos")
-dailymotion_view_counts = fetch_view_counts("dailymotion", "dailymotion_videos")
-youtube_view_counts = fetch_view_counts("YouTube_Analytics", "YouTube")
+# Fetch view counts from social_media_dashboard view for Twitch, Dailymotion, and YouTube
+twitch_view_counts = fetch_view_counts("Twitch")
+dailymotion_view_counts = fetch_view_counts("Dailymotion")
+youtube_view_counts = fetch_view_counts("YouTube")
 
 # Plotting
 plt.figure(figsize=(10, 6))
@@ -57,4 +51,5 @@ plt.title('View Counts from Different Platforms')
 plt.xlabel('Video Index')
 plt.ylabel('View Count')
 plt.legend()
-plt.savefig("PLot.png", dpi=1000)
+plt.savefig("Plot.png", dpi=300)
+plt.show()
