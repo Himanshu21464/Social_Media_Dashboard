@@ -53,3 +53,112 @@ plt.ylabel('View Count')
 plt.legend()
 plt.savefig("Plot.png", dpi=300)
 plt.show()
+
+
+#plot 2----------------------------------------------------------------------------------------------------------------------
+import mysql.connector
+from prettytable import PrettyTable
+import matplotlib.pyplot as plt
+
+# Your MySQL database configuration
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': 'siddharth',
+    'database': 'global_database',
+}
+
+# Create a MySQL connection
+conn = mysql.connector.connect(**DB_CONFIG)
+
+try:
+    # Create a cursor object to interact with the database
+    cursor = conn.cursor()
+
+    # SQL command
+    sql_command = """
+        SELECT DISTINCT Platform, Title, View_Count, duration
+        FROM social_media_Dashboard 
+        ORDER BY View_Count DESC 
+        LIMIT 10;
+    """
+
+    # Execute the SQL command
+    cursor.execute(sql_command)
+
+    # Fetch all the rows
+    result = cursor.fetchall()
+
+    # Create a PrettyTable instance
+    table = PrettyTable()
+    table.field_names = ["Platform", "Title", "View_Count", "Duration"]
+
+    # Add data to the table and collect data for the bar graph
+    platforms = []
+    view_counts = []
+    durations = []
+
+    for row in result:
+        table.add_row(row)
+        platforms.append(f"{row[0]} - {row[1]}")  # Combine Platform and Title for better readability
+        view_counts.append(row[2])
+        durations.append(row[3])
+
+    # Print the formatted table
+    print(table)
+
+    # Define colors for each platform
+    platform_colors = {'YouTube': 'red', 'DailyMotion': 'yellow', 'Twitch': 'violet'}
+
+    # Create a bar graph for view counts with different colors for each platform
+    fig, ax = plt.subplots()
+    index = range(10)
+
+    for i, platform in enumerate(platforms):
+        ax.bar(platform, view_counts[i], color=platform_colors.get(platform.split(' - ')[0], 'gray'))
+
+    ax.set_xlabel('Video')
+    ax.set_ylabel('View Count')
+    ax.set_title('Top 10 Videos - View Count')
+    ax.set_xticks(platforms)
+    ax.set_xticklabels(platforms, rotation=45, ha='right')
+
+    # Add legend for platform colors in the top right corner
+    legend_labels = [plt.Line2D([0], [0], marker='o', color='w', label=platform, markerfacecolor=color, markersize=10)
+                     for platform, color in platform_colors.items()]
+
+    ax.legend(handles=legend_labels, title='Platform Colors', loc='upper right')
+
+    plt.show()
+
+except mysql.connector.Error as e:
+    print(f"Error: {e}")
+
+finally:
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
