@@ -202,14 +202,14 @@ if CHANNEL_ID:
     channel_stats = get_channel_stats(youtube, CHANNEL_ID)
     upload_id = channel_stats[0]['contentDetails']['relatedPlaylists']['uploads']
 
-    # Ask the user to choose a date range
-    print("Choose a date range:")
-    print("1. Last 1 week")
-    print("2. Last 15 days")
-    print("3. Last 30 days")
-    print("4. Last 10 videos")
-    print("5. Last 50 videos")
-    print("6. All videos")
+    # # Ask the user to choose a date range
+    # print("Choose a date range:")
+    # print("1. Last 1 week")
+    # print("2. Last 15 days")
+    # print("3. Last 30 days")
+    # print("4. Last 10 videos")
+    # print("5. Last 50 videos")
+    # print("6. All videos")
     #date_range_choice = input("Enter the option (1-6): ")
     date_range_choice = '3'
 

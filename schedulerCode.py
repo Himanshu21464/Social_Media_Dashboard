@@ -424,6 +424,9 @@ def YOUTUBE():
                 published = video['snippet']['publishedAt']
                 description = video['snippet']['description']
 
+                # Get video duration in ISO 8601 format
+                duration = video['contentDetails']['duration']
+
                 # Check if 'tags' field exists and handle it gracefully
                 if 'tags' in video['snippet']:
                     tags = video['snippet']['tags']
@@ -444,7 +447,8 @@ def YOUTUBE():
                     view_count=view_count,
                     like_count=like_count,
                     dislike_count=dislike_count,
-                    comment_count=comment_count
+                    comment_count=comment_count,
+                    duration=duration  # Added video duration
                 )
                 stats_list.append(stats_dict)
 
@@ -452,7 +456,7 @@ def YOUTUBE():
 
     # Ask the user to enter a channel name
     # channel_name = input("Enter the name of the YouTube channel: ")
-    channel_name = "soul regaltos"
+    channel_name = "xboxviewtv"
 
     # Initialize the MySQL connection
     conn = mysql.connector.connect(**DB_CONFIG)
@@ -480,7 +484,8 @@ def YOUTUBE():
         Like_Count INT,
         Dislike_Count INT,
         Comment_Count INT,
-        Reactions INT
+        Reactions INT,
+        Duration VARCHAR(10)
     );
     '''
     try:
@@ -501,15 +506,15 @@ def YOUTUBE():
         channel_stats = get_channel_stats(youtube, CHANNEL_ID)
         upload_id = channel_stats[0]['contentDetails']['relatedPlaylists']['uploads']
 
-        # Ask the user to choose a date range
-        print("Choose a date range:")
-        print("1. Last 1 week")
-        print("2. Last 15 days")
-        print("3. Last 30 days")
-        print("4. Last 10 videos")
-        print("5. Last 50 videos")
-        print("6. All videos")
-        # date_range_choice = input("Enter the option (1-6): ")
+        # # Ask the user to choose a date range
+        # print("Choose a date range:")
+        # print("1. Last 1 week")
+        # print("2. Last 15 days")
+        # print("3. Last 30 days")
+        # print("4. Last 10 videos")
+        # print("5. Last 50 videos")
+        # print("6. All videos")
+        # # date_range_choice = input("Enter the option (1-6): ")
         date_range_choice = '3'
 
         if date_range_choice in ['1', '2', '3', '4', '5', '6']:
@@ -533,9 +538,9 @@ def YOUTUBE():
             df["comment_count"] = pd.to_numeric(df["comment_count"])
             df["reactions"] = df["like_count"] + df["dislike_count"] + df["comment_count"] + df["comment_count"]
 
-            # Save data to a CSV file
-            file_name = f"{channel_name}.csv"
-            df.to_csv(file_name, index=False)
+            # # Save data to a CSV file
+            # file_name = f"{channel_name}.csv"
+            # df.to_csv(file_name, index=False)
 
             # Connect to MySQL and save the data to a table
             try:
@@ -560,7 +565,8 @@ def YOUTUBE():
                     Like_Count INT,
                     Dislike_Count INT,
                     Comment_Count INT,
-                    Reactions INT
+                    Reactions INT,
+                    Duration VARCHAR(10)
                 );
                 '''
                 cursor.execute(create_table_query)
@@ -569,13 +575,13 @@ def YOUTUBE():
                 # Insert data into the MySQL table
                 for row in df.itertuples(index=False):
                     cursor.execute(
-                        'INSERT INTO YouTube (Title, Description, Published, Tag_Count, View_Count, Like_Count, Dislike_Count, Comment_Count, Reactions) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                        'INSERT INTO YouTube (Title, Description, Published, Tag_Count, View_Count, Like_Count, Dislike_Count, Comment_Count, Reactions, Duration) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                         (row.title, row.description, row.published, row.tag_count, row.view_count, row.like_count,
-                         row.dislike_count, row.comment_count, row.reactions)
+                         row.dislike_count, row.comment_count, row.reactions, row.duration)
                     )
                 conn.commit()
 
-                print(f"Data saved as '{file_name}' and inserted into the MySQL table 'YouTube'.")
+                print(f"Data inserted into the MySQL table 'YouTube'.")
 
             except mysql.connector.Error as e:
                 print(f"Error: {e}")
@@ -586,7 +592,6 @@ def YOUTUBE():
 
         else:
             print("Invalid date range choice. Please enter a valid option (1-6).")
-
 
 DAILYMOTION()
 TWITCH()
