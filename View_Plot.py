@@ -209,6 +209,61 @@ def query2():
 
 
 
+# #plot 4----------------------------------------------------------------------------------------------------------
+import mysql.connector
+import matplotlib.pyplot as plt
+from datetime import timedelta
+
+# Function to fetch total duration for each platform
+def fetch_total_duration():
+    try:
+        # Connect to the MySQL database
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="Himanshu@1809",
+            database="global_database"
+        )
+
+        # Create a cursor
+        cursor = conn.cursor()
+
+        # Fetch total duration for each platform
+        query = """
+        SELECT Platform, SEC_TO_TIME(SUM(TIME_TO_SEC(Duration))) AS Total_Duration
+        FROM social_media_Dashboard
+        GROUP BY Platform;
+        """
+        cursor.execute(query)
+
+        # Fetch the results
+        results = cursor.fetchall()
+
+        # Close the cursor and the connection
+        cursor.close()
+        conn.close()
+
+        return results
+
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
+        return []
+
+# Fetch total duration for each platform
+total_durations = fetch_total_duration()
+
+# Convert duration to seconds
+total_durations_seconds = [(platform[0], timedelta(hours=platform[1].seconds // 3600, minutes=(platform[1].seconds // 60) % 60, seconds=platform[1].seconds % 60)) for platform in total_durations]
+
+# Plotting
+labels = [platform[0] for platform in total_durations_seconds]
+durations_seconds = [duration[1].total_seconds() for duration in total_durations_seconds]
+
+plt.pie(durations_seconds, labels=labels, autopct='%1.1f%%', startangle=90)
+plt.title('Total Duration Distribution by Platform')
+plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+plt.show()
 
 
 
