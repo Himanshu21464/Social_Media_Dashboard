@@ -18,9 +18,7 @@ The Social Media Dashboard is a platform that integrates data from numerous soci
 
 2. **Real-Time Processing**: To give users current insights, process and update data in real-time.
 
-3. **Data Visualization**: Create charts, graphs, and dashboards that are aesthetically appealing to present the data in an understandable way to everyone.
-
-4. **User Authentication**: Employ user authentication and permission to maintain the security and privacy of the data.
+3. **User Authentication**: Employ user authentication and permission to maintain the security and privacy of the data.
 
 ## Importance
 
