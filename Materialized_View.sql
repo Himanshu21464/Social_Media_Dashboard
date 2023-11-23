@@ -1,6 +1,3 @@
-USE dailymotion;
-SELECT *FROM dailymotion_videos;
-
 USE YouTube_Analytics;
 SELECT *FROM YouTube;
 
@@ -64,12 +61,12 @@ SELECT
     NULL AS Like_Count,  -- Placeholder for Like_Count
     NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
     NULL AS Comment_Count,  -- Placeholder for Comment_Count
+    NULL as Reactions,
     duration as duration,
     NULL AS Tags,  -- Placeholder for Tags
     url as url,
     username as username,
-    video_id as video_id,
-    NULL as Reactions
+    video_id as video_id
     
 FROM twitch.twitch_videos;
 select *from social_media_Dashboard;
