@@ -328,7 +328,8 @@ def YOUTUBE():
     DATABASE_NAME = 'YouTube_Analytics'
     TABLE_NAME = 'YouTube'
 
-    API_KEY = "AIzaSyBPwWMVAa5gdo6pPo7_mrQeZkKoZO5FCiY"  # Replace with your YouTube Data API Key
+    # API_KEY = "AIzaSyBPwWMVAa5gdo6pPo7_mrQeZkKoZO5FCiY"  # Replace with your YouTube Data API Key
+    API_KEY = "AIzaSyCTwd1eQLhvvlLIQvX7pdCIOcIttC1LdNM"  # Cbum API
 
     # Function to search for a YouTube channel by name
     def search_channel_by_name(youtube, channel_name):
@@ -505,7 +506,7 @@ def YOUTUBE():
         Dislike_Count INT,
         Comment_Count INT,
         Reactions INT,
-        Duration VARCHAR(10)
+        Duration time
     );
     '''
     try:
@@ -586,7 +587,7 @@ def YOUTUBE():
                     Dislike_Count INT,
                     Comment_Count INT,
                     Reactions INT,
-                    Duration VARCHAR(10)
+                    Duration time
                 );
                 '''
                 cursor.execute(create_table_query)
@@ -826,13 +827,13 @@ def create_social_media_dashboard_view():
         print(f"MySQL Error: {err}")
 
 
-# DAILYMOTION()
-# standardize_dailymotion_video_duration()
+DAILYMOTION()
+standardize_dailymotion_video_duration()
 #
-# TWITCH()
-# standardize_twitch_video_duration()
+TWITCH()
+standardize_twitch_video_duration()
 
-# YOUTUBE()
+YOUTUBE()
 
 # Call the function to run the query
 create_social_media_dashboard_view()
