@@ -17,8 +17,8 @@ try:
     # Create a cursor object to interact with the database
     cursor = conn.cursor()
 
-    # SQL command to select video titles from your table (replace 'your_table' with the actual table name)
-    sql_command = "SELECT Title FROM social_media_Dashboard"
+    # SQL command to select video titles, platform, and view count from your table
+    sql_command = "SELECT Title, Platform, View_Count FROM social_media_Dashboard"
 
     # Execute the SQL command
     cursor.execute(sql_command)
@@ -26,28 +26,31 @@ try:
     # Fetch all the rows
     result = cursor.fetchall()
 
-    # Extract titles into a list
-    video_titles = [row[0] for row in result]
+    # Extract data into a list of dictionaries
+    data = [{'title': row[0], 'platform': row[1], 'view_count': row[2]} for row in result]
 
     # Function to clean and split title into words
     def get_words(title):
         return re.findall(r'\b\w+\b', title)
 
     # Count word frequencies
-    word_freq = Counter(word for title in video_titles for word in get_words(title))
+    word_freq = Counter(word for entry in data for word in get_words(entry['title']))
 
-    # Group titles by most common words
-    grouped_titles = {word: [] for word, _ in word_freq.most_common()}
-    for title in video_titles:
-        for word in get_words(title):
-            if word in grouped_titles:
-                grouped_titles[word].append(title)
+    # Group entries by the number of common words (in descending order)
+    grouped_entries = {tuple(sorted([word for word in get_words(entry['title']) if word in word_freq])): [] for entry in data}
+    for entry in data:
+        common_words = tuple(sorted([word for word in get_words(entry['title']) if word in word_freq]))
+        grouped_entries[common_words].append(entry)
 
-    # Print grouped titles
-    for word, titles in grouped_titles.items():
-        print(f"Word: {word}")
-        for title in titles:
-            print(f"  - {title}")
+    # Print grouped entries with common words, titles, platform, and view count
+    for words, entries in grouped_entries.items():
+        num_common_words = len(words)
+        common_words_str = ', '.join(words)
+
+        print(f"\n\n-----------------Common Words ({num_common_words} words): {common_words_str}--------------------")
+        # print("-------------------------------------------------------------------------------------------------")
+        for entry in entries:
+            print(f"  - Title: {entry['title']}, Platform: {entry['platform']}, View Count: {entry['view_count']}")
 
 except mysql.connector.Error as e:
     print(f"Error: {e}")
