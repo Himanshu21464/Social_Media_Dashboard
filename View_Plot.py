@@ -142,7 +142,69 @@ finally:
 
 
 
+# Plot 3-------------------------------------------------------------------------------------------------------------------
+def query2():
+    
 
+
+    # Your MySQL database configuration
+    DB_CONFIG = {
+        'host': 'localhost',
+        'user': 'root',
+        'password': 'siddharth',
+        'database': 'global_database',
+    }
+
+    # Create a MySQL connection
+    conn = mysql.connector.connect(**DB_CONFIG)
+
+    try:
+        # Create a cursor object to interact with the database
+        cursor = conn.cursor()
+
+        # SQL command
+        sql_command = """
+            SELECT
+                'YouTube' AS Platform,
+                SUM(View_Count) AS TotalViews
+            FROM
+                YouTube_Analytics.YouTube
+            UNION ALL
+            SELECT
+                'DailyMotion' AS Platform,
+                SUM(views_total) AS TotalViews
+            FROM
+                dailymotion.dailymotion_videos
+            UNION ALL
+            SELECT
+                'Twitch' AS Platform,
+                SUM(views) AS TotalViews
+            FROM
+                twitch.twitch_videos;
+        """
+
+        # Execute the SQL command
+        cursor.execute(sql_command)
+
+        # Fetch all the rows
+        result = cursor.fetchall()
+
+        # Extracting platform names and total views
+        platforms = [row[0] for row in result]
+        total_views = [row[1] for row in result]
+
+        # Create a pie chart
+        plt.pie(total_views, labels=platforms, autopct='%1.1f%%', startangle=140)
+        plt.title('Total Views by Platform')
+        plt.show()
+
+    except mysql.connector.Error as e:
+        print(f"Error: {e}")
+
+    finally:
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
 
 
 
