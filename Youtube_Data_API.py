@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from googleapiclient.discovery import build
 import os
+import isodate
 import pandas as pd
 import mysql.connector
 
@@ -124,6 +125,17 @@ def get_video_details(youtube, video_list):
             # Get video duration in ISO 8601 format
             duration = video['contentDetails']['duration']
 
+            # Parse the duration to a timedelta
+            duration_timedelta = isodate.parse_duration(duration)
+
+            # Convert the timedelta to SQL time format
+            hours = duration_timedelta.seconds // 3600
+            minutes = (duration_timedelta.seconds // 60) % 60
+            seconds = duration_timedelta.seconds % 60
+
+            # Format the time as a string
+            duration = f"{hours}:{minutes}:{seconds}"
+
             # Check if 'tags' field exists and handle it gracefully
             if 'tags' in video['snippet']:
                 tags = video['snippet']['tags']
@@ -152,7 +164,7 @@ def get_video_details(youtube, video_list):
     return stats_list
 # Ask the user to enter a channel name
 #channel_name = input("Enter the name of the YouTube channel: ")
-channel_name = "soul regaltos"
+channel_name = "xboxviewtv"
 
 # Initialize the MySQL connection
 conn = mysql.connector.connect(**DB_CONFIG)
@@ -181,7 +193,7 @@ CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
     Dislike_Count INT,
     Comment_Count INT,
     Reactions INT,
-    Duration VARCHAR(10)
+    Duration time
 );
 '''
 try:
@@ -262,7 +274,7 @@ if CHANNEL_ID:
                 Dislike_Count INT,
                 Comment_Count INT,
                 Reactions INT,
-                Duration VARCHAR(10)
+                Duration time
             );
             '''
             cursor.execute(create_table_query)
