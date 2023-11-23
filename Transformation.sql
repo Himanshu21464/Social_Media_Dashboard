@@ -47,4 +47,21 @@ CHANGE COLUMN new_duration duration TIME;
 
 -- ---------------Standardize the video duration of Dailymotion -----------------
 
+-- Step 1: Add a new column with the desired datatype
+use dailymotion;
+ALTER TABLE dailymotion_videos
+ADD COLUMN new_duration TIME;
+
+-- Step 2: Update the new column with the formatted durations
+UPDATE dailymotion_videos
+SET new_duration = SEC_TO_TIME(duration);
+
+-- Step 3: Drop the old column (if needed)
+ALTER TABLE dailymotion_videos
+DROP COLUMN duration;
+
+-- Step 4: Rename the new column to the original column name
+ALTER TABLE dailymotion_videos
+CHANGE COLUMN new_duration duration TIME;
+
 
