@@ -3,14 +3,15 @@ import urllib.parse
 from datetime import datetime, timedelta
 import mysql.connector
 
+
 # Function to fetch video details for a public user within the last 30 days
 def get_public_user_video_data(username):
     encoded_username = urllib.parse.quote(username, safe='')  # URL encode the username
     url = f'https://api.dailymotion.com/user/{encoded_username}/videos'
-    
+
     # Calculate the timestamp for 30 days ago
     thirty_days_ago = (datetime.now() - timedelta(days=30)).timestamp()
-    
+
     params = {
         'fields': 'id,title,views_total,likes_total,duration,tags,created_time,rating',
         'limit': 100,  # You can adjust the limit as needed
@@ -22,18 +23,19 @@ def get_public_user_video_data(username):
         if response.status_code == 200:
             data = response.json()
             videos = data.get('list', [])
-            
+
             # Filter videos created within the last 30 days
             filtered_videos = [video for video in videos if video.get('created_time') >= thirty_days_ago]
-            
+
             video_data.extend(filtered_videos)
-            
+
             url = data.get('paging', {}).get('next')
         else:
             print(f'Error fetching video data: {response.status_code} - {response.text}')
             break
 
     return video_data
+
 
 # Public user's Dailymotion username (without spaces or special characters)
 username = "XboxViewTV"
@@ -42,9 +44,10 @@ username = "XboxViewTV"
 db_config = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'Shi@1862000',
+    'password': 'Himanshu@1809',
 }
-db_name="dailymotion"
+db_name = "dailymotion"
+
 
 # Function to create the database and fetch video details for a public user within the last 30 days
 def create_and_use_database(db_name):
@@ -67,7 +70,8 @@ def create_and_use_database(db_name):
     db_config['database'] = db_name
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
-
+    cursor.execute('DELETE FROM dailymotion_videos;')
+    conn.commit()
     # Create a table for video data in MySQL
     create_table_query = """
     CREATE TABLE IF NOT EXISTS dailymotion_videos (
@@ -106,10 +110,12 @@ def create_and_use_database(db_name):
             cursor.execute(insert_query, data)
 
         conn.commit()
-        print(f"Video data for {username} created in the last 30 days has been successfully inserted into the MySQL database.")
+        print(
+            f"Video data for {username} created in the last 30 days has been successfully inserted into the MySQL database.")
 
     # Close the database connection
     conn.close()
+
 
 # Create and use the 'dailymotion' database
 create_and_use_database('dailymotion')

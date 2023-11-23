@@ -71,6 +71,10 @@ def DAILYMOTION ():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
 
+        # Clear all rows from the MySQL table
+        cursor.execute('DELETE FROM dailymotion_videos;')
+        conn.commit()
+
         # Create a table for video data in MySQL
         create_table_query = """
         CREATE TABLE IF NOT EXISTS dailymotion_videos (
