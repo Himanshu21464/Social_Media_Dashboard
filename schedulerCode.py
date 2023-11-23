@@ -2,8 +2,11 @@ import requests
 import urllib.parse
 from datetime import datetime, timedelta
 import mysql.connector
+import isodate
 
 def DAILYMOTION ():
+
+
     # Function to fetch video details for a public user within the last 30 days
     def get_public_user_video_data(username):
         encoded_username = urllib.parse.quote(username, safe='')  # URL encode the username
@@ -72,7 +75,8 @@ def DAILYMOTION ():
         cursor = conn.cursor()
 
         # Clear all rows from the MySQL table
-        cursor.execute('DELETE FROM dailymotion_videos;')
+
+        cursor.execute('DROP TABLE IF EXISTS dailymotion_videos;')
         conn.commit()
 
         # Create a table for video data in MySQL
@@ -118,7 +122,6 @@ def DAILYMOTION ():
 
         # Close the database connection
         conn.close()
-
 
     # Create and use the 'dailymotion' database
     create_and_use_database('dailymotion')
@@ -182,6 +185,8 @@ def TWITCH():
                 videos_data = response_videos.json()
                 cursor = conn.cursor()
                 # Create a table to store video details if it doesn't exist
+                cursor.execute("Drop table IF EXISTS twitch_videos")
+
                 create_table_query = "CREATE TABLE IF NOT EXISTS twitch_videos (id INT AUTO_INCREMENT PRIMARY KEY,username varchar(255), video_id VARCHAR(255), title VARCHAR(255), description TEXT, url VARCHAR(255), published_at varchar(255), views INT, language VARCHAR(255), duration varchar(255));"
                 cursor.execute(create_table_query)
 
@@ -431,6 +436,17 @@ def YOUTUBE():
                 # Get video duration in ISO 8601 format
                 duration = video['contentDetails']['duration']
 
+                # Parse the duration to a timedelta
+                duration_timedelta = isodate.parse_duration(duration)
+
+                # Convert the timedelta to SQL time format
+                hours = duration_timedelta.seconds // 3600
+                minutes = (duration_timedelta.seconds // 60) % 60
+                seconds = duration_timedelta.seconds % 60
+
+                # Format the time as a string
+                duration = f"{hours}:{minutes}:{seconds}"
+
                 # Check if 'tags' field exists and handle it gracefully
                 if 'tags' in video['snippet']:
                     tags = video['snippet']['tags']
@@ -597,6 +613,219 @@ def YOUTUBE():
         else:
             print("Invalid date range choice. Please enter a valid option (1-6).")
 
+
+import mysql.connector
+
+def standardize_dailymotion_video_duration():
+    # Establish a connection to the database
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Himanshu@1809",
+        database="dailymotion"
+    )
+
+    # Create a cursor
+    cursor = conn.cursor()
+
+    try:
+        # Step 1: Add a new column with the desired datatype
+        cursor.execute("ALTER TABLE dailymotion_videos ADD COLUMN new_duration TIME;")
+
+        # Step 2: Update the new column with the formatted durations
+        cursor.execute("""
+            UPDATE dailymotion_videos
+            SET new_duration = SEC_TO_TIME(duration);
+        """)
+
+        # Step 3: Drop the old column (if needed)
+        cursor.execute("ALTER TABLE dailymotion_videos DROP COLUMN duration;")
+
+        # Step 4: Rename the new column to the original column name
+        cursor.execute("ALTER TABLE dailymotion_videos CHANGE COLUMN new_duration duration TIME;")
+
+        # Commit the changes
+        conn.commit()
+
+        print("Dailymotion video duration standardized successfully.")
+
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
+
+    finally:
+        # Close the cursor and the connection
+        cursor.close()
+        conn.close()
+
+def standardize_twitch_video_duration():
+    # Establish a connection to the database
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Himanshu@1809",
+        database="twitch"
+    )
+
+    # Create a cursor
+    cursor = conn.cursor()
+
+    try:
+        # Step 1: Add a new column with the desired datatype
+        cursor.execute("ALTER TABLE twitch_videos ADD COLUMN new_duration TIME;")
+
+        # Step 2: Update the new column with the formatted durations
+        cursor.execute("""
+            UPDATE twitch_videos
+            SET new_duration = CASE
+                WHEN duration REGEXP '^[0-9]+h[0-9]+m[0-9]+s$' THEN TIME_FORMAT(
+                    CONCAT(
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(duration, 'h', 1), 'h', -1),
+                        ':',
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(duration, 'm', 1), 'h', -1),
+                        ':',
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(duration, 's', 1), 'm', -1)
+                    ),
+                    '%H:%i:%s'
+                )
+                WHEN duration REGEXP '^[0-9]+m[0-9]+s$' THEN TIME_FORMAT(
+                    CONCAT(
+                        '00:',
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(duration, 'm', 1), 'm', -1),
+                        ':',
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(duration, 's', 1), 'm', -1)
+                    ),
+                    '%H:%i:%s'
+                )
+                WHEN duration REGEXP '^[0-9]+s$' THEN TIME_FORMAT(
+                    CONCAT(
+                        '00:00:',
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(duration, 's', 1), 's', -1)
+                    ),
+                    '%H:%i:%s'
+                )
+                ELSE duration
+            END;
+        """)
+
+        # Step 3: Drop the old column (if needed)
+        cursor.execute("ALTER TABLE twitch_videos DROP COLUMN duration;")
+
+        # Step 4: Rename the new column to the original column name
+        cursor.execute("ALTER TABLE twitch_videos CHANGE COLUMN new_duration duration TIME;")
+
+        # Commit the changes
+        conn.commit()
+
+        print("Twitch video duration standardized successfully.")
+
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
+
+    finally:
+        # Close the cursor and the connection
+        cursor.close()
+        conn.close()
+
+def create_social_media_dashboard_view():
+    try:
+        # Establish a connection to the database
+        conn = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="Himanshu@1809"
+        )
+
+        # Create a cursor
+        cursor = conn.cursor()
+
+        cursor.execute("CREATE DATABASE IF NOT EXISTS global_database;")
+        cursor.execute("use global_database;")
+
+        # Define the SQL script to create the view
+        create_view_query = """
+        CREATE VIEW social_media_Dashboard AS
+        SELECT
+            'YouTube' AS Platform,
+            Title AS Title,
+            Description AS Description,
+            Published AS Published_Date,
+            Tag_Count AS Tag_Count,
+            View_Count AS View_Count,
+            like_Count AS Like_Count,
+            Dislike_Count AS Dislike_Count,
+            comment_Count AS Comment_Count,
+            Reactions AS Reactions,
+            Duration AS Duration,
+            NULL AS username,  -- Placeholder for username
+            NULL AS video_id,  -- Placeholder for video_id
+            NULL AS url,      -- Placeholder for url
+            NULL as Tags
+        FROM YouTube_Analytics.YouTube
+
+        UNION ALL
+
+        SELECT
+            'DailyMotion' AS Platform,
+            title AS Title,
+            NULL AS Description,  -- Placeholder for Description
+            created_time AS Published_Date,
+            NULL AS Tag_Count,    -- Placeholder for Tag_Count
+            views_total AS View_Count,
+            likes_total AS Like_Count,
+            NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
+            NULL AS Comment_Count,  -- Placeholder for Comment_Count
+            rating as Reactions,
+            duration as duration,
+            tags AS Tags,
+            NULL AS username,  -- Placeholder for username
+            NULL AS video_id,  -- Placeholder for video_id
+            NULL AS url       -- Placeholder for url
+        FROM dailymotion.dailymotion_videos
+
+        UNION ALL
+
+        SELECT
+            'Twitch' AS Platform,
+            title AS Title,
+            description as Description,
+            published_at as Published_Date,
+            NULL AS Tag_Count,  -- Placeholder for Tag_Count
+            views AS View_Count,
+            NULL AS Like_Count,  -- Placeholder for Like_Count
+            NULL AS Dislike_Count,  -- Placeholder for Dislike_Count
+            NULL AS Comment_Count,  -- Placeholder for Comment_Count
+            NULL as Reactions,
+            duration as duration,
+            NULL AS Tags,  -- Placeholder for Tags
+            url as url,
+            username as username,
+            video_id as video_id
+        FROM twitch.twitch_videos;
+        """
+
+        # Execute the SQL script
+        cursor.execute(create_view_query)
+
+        # Commit the changes
+        conn.commit()
+
+        print("Social Media Dashboard view created successfully.")
+
+        # Close the cursor and the connection
+        cursor.close()
+        conn.close()
+
+    except mysql.connector.Error as err:
+        print(f"MySQL Error: {err}")
+
+
 DAILYMOTION()
+standardize_dailymotion_video_duration()
+
 TWITCH()
+standardize_twitch_video_duration()
+
 YOUTUBE()
+
+# Call the function to run the query
+create_social_media_dashboard_view()
