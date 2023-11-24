@@ -14,11 +14,12 @@ The Social Media Dashboard is a platform that integrates data from numerous soci
 
 ## Requirements
 
-1. **Data Integration**: To collect data on followers, likes, shares, comments, and other metrics, integrate APIs from multiple social media networks (such as YouTube, Twitch, and Dailymotion).
+1. **Data Integration**: To collect data on views, likes, watchtime, comments, and other metrics, integrate APIs from multiple social media networks (such as YouTube, Twitch, and Dailymotion).
 
 2. **Real-Time Processing**: To give users current insights, process and update data in real-time.
 
 3. **User Authentication**: Employ user authentication and permission to maintain the security and privacy of the data.
+4. **Data Visualization**: To present the data understandably to everyone, create charts, graphs, and dashboards that are aesthetically appealing.
 
 ## Importance
 
